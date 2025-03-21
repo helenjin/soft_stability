@@ -146,6 +146,16 @@ def get_mfaba_for_image(
     # return (torch.rand(num_patches) < top_k_frac).long()
 
 
+    
+def get_random_for_image(expln_shape = (1, 14, 14), top_k_frac=0.25):
+    total_feats = expln_shape[1] * expln_shape[2]
+    expln_size = int(total_feats * top_k_frac)
+    index = torch.randperm(total_feats)[:expln_size]
+    random_expln = torch.zeros(total_feats)
+    random_expln.index_fill_(0, index, 1)
+    return random_expln.view(expln_shape)
+
+
 
 def get_alpha_from_img_attrs(attrs, image_size=224, num_patches_one_axis=14, masked=True, top_k_frac=0.25):
     """
@@ -318,7 +328,16 @@ def get_mfaba_for_text(
     if return_verbose:
         return expln_alpha, expln, attrs
     return expln_alpha
-    
+
+
+def get_random_for_text(expln_shape, top_k_frac=0.25):
+    total_feats = expln_shape[1]
+    expln_size = int(total_feats * top_k_frac)
+    index = torch.randperm(total_feats)[:expln_size]
+    random_expln = torch.zeros(total_feats)
+    random_expln.index_fill_(0, index, 1)
+    return random_expln.view(expln_shape)
+
     
 def get_alpha_from_text_attrs(attrs, top_k_frac=0.25):
     """
