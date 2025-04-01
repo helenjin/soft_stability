@@ -2,7 +2,8 @@ import torch
 
 import sys
 # sys.path.append('/shared_data0/helenjin/exlib/src')
-sys.path.append('/shared_data0/weiqiuy/exlib/src')
+# sys.path.append('/shared_data0/weiqiuy/exlib/src')
+sys.path.append("/home/antonxue/foo/exlib/src")
 import exlib
 
 from exlib.explainers import LimeImageCls, ShapImageCls, IntGradImageCls, MfabaImageCls
@@ -27,13 +28,13 @@ def get_lime_for_image(
     pred = None,
     patch_segmenter = patch_segmenter,
     num_patches: int = 196,
-    num_samples: int = 1000,
+    num_samples: int = 100,
     top_k_frac: float = 0.25,
     return_verbose: bool = False
 ):
     device = next(model.parameters()).device
     X = image.unsqueeze(0).to(device)
-    if pred == None:
+    if pred is None:
         logits = model(X)
         pred = torch.argmax(logits, dim=-1)
 
@@ -44,17 +45,15 @@ def get_lime_for_image(
         "hide_color": 0, 
         "num_samples": num_samples
     }
-    gimk = {
-        "positive_only": False
-    }
-    liek = {
-        "random_state": 1
-    }
+    gimk = { "positive_only": False }
+    liek = { "random_state": 1 }
 
-    explainer = LimeImageCls(model, 
-                             explain_instance_kwargs=eik, 
-                             get_image_and_mask_kwargs=gimk, 
-                             LimeImageExplainerKwargs=liek)
+    explainer = LimeImageCls(
+        model, 
+        explain_instance_kwargs=eik, 
+        get_image_and_mask_kwargs=gimk, 
+        LimeImageExplainerKwargs=liek
+    )
     
     expln = explainer(X, pred)
     num_patches_one_axis = int(num_patches**0.5)
@@ -76,7 +75,7 @@ def get_shap_for_image(
 ):
     device = next(model.parameters()).device
     X = image.unsqueeze(0).to(device)
-    if pred == None:
+    if pred is None:
         logits = model(X)
         pred = torch.argmax(logits, dim=-1)
 
@@ -104,7 +103,7 @@ def get_intgrad_for_image(
 ):
     device = next(model.parameters()).device
     X = image.unsqueeze(0).to(device)
-    if pred == None:
+    if pred is None:
         logits = model(X)
         pred = torch.argmax(logits, dim=-1)
         
@@ -130,7 +129,7 @@ def get_mfaba_for_image(
 ):
     device = next(model.parameters()).device
     X = image.unsqueeze(0).to(device)
-    if pred == None:
+    if pred is None:
         logits = model(X)
         pred = torch.argmax(logits, dim=-1)
         
@@ -226,7 +225,7 @@ def get_lime_for_text(
         tokens = x.split()
         return tokens
     
-    if pred == None:
+    if pred is None:
         logits = model(input_ids=input_ids, attention_mask=attention_mask)
         pred = torch.argmax(logits, dim=-1)
 
@@ -263,7 +262,7 @@ def get_shap_for_text(
     top_k_frac: float = 0.25,
     return_verbose: bool = False
 ):
-    if pred == None:
+    if pred is None:
         logits = model(input_ids=input_ids, attention_mask=attention_mask)
         pred = torch.argmax(logits, dim=-1)
 
@@ -288,7 +287,7 @@ def get_intgrad_for_text(
     top_k_frac: float = 0.25,
     return_verbose: bool = False
 ):
-    if pred == None:
+    if pred is None:
         logits = model(input_ids=input_ids, attention_mask=attention_mask)
         pred = torch.argmax(logits, dim=-1)
 
@@ -313,7 +312,7 @@ def get_mfaba_for_text(
     top_k_frac: float = 0.25,
     return_verbose: bool = False
 ):
-    if pred == None:
+    if pred is None:
         logits = model(input_ids=input_ids, attention_mask=attention_mask)
         pred = torch.argmax(logits, dim=-1)
 

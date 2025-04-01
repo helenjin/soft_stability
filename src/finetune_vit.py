@@ -1,22 +1,37 @@
 from pathlib import Path
 import torch
 import torch.nn.functional as F
-import torchvision.transforms as tvtfs
 from torch.utils.data import Dataset, DataLoader
 import datasets as hfds
 from transformers import ViTForImageClassification, ViTImageProcessor, get_scheduler
 from tqdm import tqdm
 
 
-def load_model(model_name_or_path: str = "google/vit-base-patch16-224-in21k"):
+def load_model(model_name_or_path: str = "google/vit-base-patch16-224"):
+    """Load a pretrained ViT model for image classification.
+    
+    Args:
+        model_name_or_path: Name or path of the pretrained model to load
+        
+    Returns:
+        ViTForImageClassification: The loaded model
+    """
     return ViTForImageClassification.from_pretrained(model_name_or_path, num_labels=1000)
 
 
 class ImagenetDataset(Dataset):
-    """ Imagenet dataset """
+    """Dataset wrapper for ImageNet with optional random masking.
+    
+    This dataset loads ImageNet images and optionally applies random masking to patches.
+    The masking is applied at the patch level (16x16 patches) with random probability.
+    
+    Args:
+        split: Dataset split to load ('train' or 'validation')
+        rand_masks: Whether to apply random masking to patches
+    """
     def __init__(self, split: str, rand_masks: bool = False):
         self.ds = hfds.load_dataset("ILSVRC/imagenet-1k", split=split)
-        self.processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224-in21k")
+        self.processor = ViTImageProcessor.from_pretrained("google/vit-base-patch16-224")
         self.rand_masks = rand_masks
 
     def __len__(self):
@@ -26,7 +41,6 @@ class ImagenetDataset(Dataset):
         item = self.ds[idx]
         image = self.preprocessor(item["image"])
 
-        # Each 16x16 patch (14x14 grid) has a random chance of turning on, randomly.
         if self.rand_masks:
             small_mask = torch.rand(1,1,14,14) < torch.rand(())
             large_mask = F.interpolate(small_mask.float(), scale_factor=(16,16)).float()
@@ -38,6 +52,17 @@ class ImagenetDataset(Dataset):
 
 
 def train_one_epoch(model, dataloader, optimizer, lr_scheduler):
+    """Train the model for one epoch.
+    
+    Args:
+        model: The model to train
+        dataloader: DataLoader for training data
+        optimizer: Optimizer for training
+        lr_scheduler: Learning rate scheduler
+        
+    Returns:
+        dict: Training metrics and model state
+    """
     model.train()
     device = next(model.parameters()).device
     all_losses, all_accs = [], []
@@ -65,6 +90,15 @@ def train_one_epoch(model, dataloader, optimizer, lr_scheduler):
 
 @torch.no_grad()
 def valid_one_epoch(model, dataloader):
+    """Validate the model for one epoch.
+    
+    Args:
+        model: The model to validate
+        dataloader: DataLoader for validation data
+        
+    Returns:
+        dict: Validation metrics
+    """
     model.eval()
     device = next(model.parameters()).device
     all_losses, all_accs = [], []
@@ -94,14 +128,23 @@ def run_finetuning_epochs(
     device: str = "cuda",
     saveto_dir: str = "_saved_models",
 ):
-    # Make directory if doesn't exist
+    """Run fine-tuning of the ViT model on ImageNet.
+    
+    Args:
+        num_epochs: Number of training epochs
+        bsz: Batch size for training
+        lr: Learning rate
+        device: Device to train on
+        saveto_dir: Directory to save checkpoints
+        
+    Returns:
+        dict: Final training metrics and model state
+    """
     Path(saveto_dir).mkdir(parents=True, exist_ok=True)
 
-    # Initialize dataloaders
     train_dataloader = DataLoader(ImagenetDataset("train", rand_masks=True), batch_size=bsz)
     valid_dataloader = DataLoader(ImagenetDataset("validation", rand_masks=True), batch_size=bsz)
 
-    # Set up the model, optimizer, and learning rate scheduler
     model = load_model()
     model.to(device)
     optimizer = torch.optim.AdamW(model.parameters(), lr=lr)
@@ -113,7 +156,6 @@ def run_finetuning_epochs(
         num_training_steps = num_train_steps
     )
 
-    # Fine-tuning loop
     for epoch in range(1, num_epochs+1):
         saveto = f"{saveto_dir}/google_vit_patch16_img224_bsz{bsz}_lr{lr:.4f}_epoch{epoch}.pt" 
         print("Training", saveto)
@@ -128,4 +170,3 @@ def run_finetuning_epochs(
 
 if __name__ == "__main__":
     run_finetuning_epochs()
-
