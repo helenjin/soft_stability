@@ -98,7 +98,7 @@ def get_intgrad_for_image(
     image: torch.FloatTensor,
     pred = None,
     num_patches: int = 196,
-    num_samples: int = 1000,
+    num_steps: int = 16,
     top_k_frac: float = 0.25,
     return_verbose: bool = False
 ):
@@ -109,7 +109,7 @@ def get_intgrad_for_image(
         pred = torch.argmax(logits, dim=-1)
         
     # call IntGrad
-    explainer = IntGradImageCls(model, num_steps=num_samples)
+    explainer = IntGradImageCls(model, num_steps=num_steps)
     
     expln = explainer(X, pred)
     num_patches_one_axis = int(num_patches**0.5)
