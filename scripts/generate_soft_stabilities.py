@@ -97,6 +97,11 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
+    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_soft_stability_rates.json")
+    if os.path.exists(save_file):
+        print(f"File already exists: {save_file}")
+        exit()
+
     model, dataset, attrs = load_model_dataset_attributions(args.save_dir, args.model_name, args.dataset_name, args.explanation_name, args.top_k_frac)
     model.eval().to(args.device)
 
@@ -125,7 +130,6 @@ if __name__ == "__main__":
         "soft_stability_rates": all_soft_stability_rates
     }
 
-    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_soft_stability_rates.json")
     with open(save_file, "w") as f:
         json.dump(save_dict, f, indent=2)
 
