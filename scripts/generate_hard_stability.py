@@ -10,7 +10,7 @@ from transformers import ViTForImageClassification, RobertaForSequenceClassifica
 
 # Load up the project
 sys.path.append("../src")
-from models import MaskedImageClassifier, MaskedTextClassifier
+from models import CertifiedMuSImageClassifier, CertifiedMuSTextClassifier
 from data_utils import ImageDataset, TweetEvalDataset
 from stability import soft_stability_rate, soft_stability_rate_text
 
@@ -29,14 +29,30 @@ def load_model_dataset_attributions(
     top_k_frac: float = 0.25
 ):
     if model_name == "vit":
-        model = MaskedImageClassifier(ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"))
+        model = CertifiedMuSImageClassifier(
+            ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"),
+            lambda_=0.25,
+            quant=64
+        )
     elif model_name == "resnet18":
-        model = MaskedImageClassifier(tvm.resnet18(weights=tvm.ResNet18_Weights.IMAGENET1K_V1))
+        model = CertifiedMuSImageClassifier(
+            tvm.resnet18(weights=tvm.ResNet18_Weights.IMAGENET1K_V1),
+            lambda_=0.25,
+            quant=64
+        )
     elif model_name == "resnet50":
-        model = MaskedImageClassifier(tvm.resnet50(weights=tvm.ResNet50_Weights.IMAGENET1K_V1))
+        model = CertifiedMuSImageClassifier(
+            tvm.resnet50(weights=tvm.ResNet50_Weights.IMAGENET1K_V1),
+            lambda_=0.25,
+            quant=64
+        )
     elif model_name == "roberta":
         _, task = dataset_name.split("_")
-        model = MaskedTextClassifier(RobertaForSequenceClassification.from_pretrained(f"cardiffnlp/roberta-base-{task}"))
+        model = CertifiedMuSTextClassifier(
+            RobertaForSequenceClassification.from_pretrained(f"cardiffnlp/roberta-base-{task}"),
+            lambda_=0.25,
+            quant=64
+        )
     else:
         raise ValueError(f"Model {model_name} not supported")
 
@@ -57,7 +73,7 @@ def load_model_dataset_attributions(
     else:
         raise ValueError(f"Dataset {dataset_name} not supported")
 
-    save_file = os.path.join(save_dir, f"{model_name}_{dataset_name}_{explanation_name}_attrs.json")
+    save_file = os.path.join(save_dir, f"{model_name}_{dataset_name}_{explanation_name}_attributions.json")
     save_dict = json.load(open(save_file))
 
     attrs = []
@@ -66,25 +82,6 @@ def load_model_dataset_attributions(
         attrs.append((attr > attr.quantile(1 - top_k_frac)).long())
 
     return model, dataset, attrs
-
-
-
-def compute_soft_stability_image(model, image, attr):
-    soft_stability_rates = []
-    for radius in IMAGE_RADII:
-        rate = soft_stability_rate(model, image, attr, radius, epsilon=0.1, delta=0.1)
-        soft_stability_rates.append(rate.item())
-    return soft_stability_rates
-
-
-def compute_soft_stability_text(model, input_ids, attr):
-    attention_mask = torch.ones_like(input_ids)
-    soft_stability_rates = []
-    max_radius_plus1 = min(21, attr.numel() - attr.sum())
-    for radius in range(1, max_radius_plus1):
-        rate = soft_stability_rate_text(model, input_ids, attention_mask, attr, radius, epsilon=0.1, delta=0.1)
-        soft_stability_rates.append(rate.item())
-    return soft_stability_rates
 
 
 if __name__ == "__main__":
@@ -100,20 +97,21 @@ if __name__ == "__main__":
     model, dataset, attrs = load_model_dataset_attributions(args.save_dir, args.model_name, args.dataset_name, args.explanation_name, args.top_k_frac)
     model.eval().to(args.device)
 
-    all_soft_stability_rates = []
+    all_certified_radii = []
     pbar = tqdm(dataset)
     for i, item in enumerate(pbar):
         if args.model_name in ["vit", "resnet18", "resnet50"]:
             image = item.to(args.device)
             attr = attrs[i].to(args.device)
-            soft_stability_rates = compute_soft_stability_image(model, image, attr)
+            out = model(image.unsqueeze(0), attr.unsqueeze(0))
+            all_certified_radii.append(out["cert_rs"].cpu().item())
         else:
             inputs, _ = item
             input_ids = inputs["input_ids"].to(args.device)
             attr = attrs[i].to(args.device)
-            soft_stability_rates = compute_soft_stability_text(model, input_ids, attr)
+            out = model(input_ids.unsqueeze(0), attr.unsqueeze(0))
+            all_certified_radii.append(out["cert_rs"].cpu().item())
 
-        all_soft_stability_rates.append(soft_stability_rates)
         pbar.set_description(
             f"{args.model_name} {args.dataset_name} {args.explanation_name} {i+1}/{len(dataset)}"
         )
@@ -122,11 +120,14 @@ if __name__ == "__main__":
         "model_name": args.model_name,
         "dataset_name": args.dataset_name,
         "explanation_name": args.explanation_name,
-        "soft_stability_rates": all_soft_stability_rates
+        "total_samples": len(dataset),
+        "lambda": model.lambda_,
+        "quant": model.quant,
+        "certified_radii": all_certified_radii
     }
 
-    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_soft_stability_rates.json")
+    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_hard_stability_radii.json")
     with open(save_file, "w") as f:
         json.dump(save_dict, f, indent=2)
 
-    print(f"Saved soft stability rates to {save_file}")
+    print(f"Saved certified radii to {save_file}")

@@ -2,7 +2,7 @@ for MODEL in vit resnet50 resnet18
 do
     for EXP in lime shap intgrad mfaba random
     do
-        python3 generate_soft_stabilities.py \
+        python3 generate_soft_stability.py \
             --model_name $MODEL \
             --dataset_name imagenet_2_per_class \
             --explanation_name $EXP
