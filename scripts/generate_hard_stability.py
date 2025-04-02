@@ -84,6 +84,10 @@ def load_model_dataset_attributions(
     return model, dataset, attrs
 
 
+def lambda_to_key(lambda_: float):
+    return f"{lambda_:.3f}"
+
+
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True)
@@ -92,25 +96,31 @@ if __name__ == "__main__":
     parser.add_argument("--top_k_frac", type=float, default=0.25)
     parser.add_argument("--save_dir", type=str, default="_cache/")
     parser.add_argument("--device", type=str, default="cuda")
+    parser.add_argument("--lambdas", type=float, nargs='+', default=[0.125, 0.25, 0.375, 0.5])
     args = parser.parse_args()
 
     model, dataset, attrs = load_model_dataset_attributions(args.save_dir, args.model_name, args.dataset_name, args.explanation_name, args.top_k_frac)
     model.eval().to(args.device)
 
-    all_certified_radii = []
+    lambda_to_radii = {lambda_to_key(lambda_): [] for lambda_ in args.lambdas}
+
     pbar = tqdm(dataset)
     for i, item in enumerate(pbar):
-        if args.model_name in ["vit", "resnet18", "resnet50"]:
-            image = item.to(args.device)
-            attr = attrs[i].to(args.device)
-            out = model(image.unsqueeze(0), attr.unsqueeze(0))
-            all_certified_radii.append(out["cert_rs"].cpu().item())
-        else:
-            inputs, _ = item
-            input_ids = inputs["input_ids"].to(args.device)
-            attr = attrs[i].to(args.device)
-            out = model(input_ids=input_ids, alpha=attr.unsqueeze(0))
-            all_certified_radii.append(out["cert_rs"].cpu().item())
+        for lambda_ in args.lambdas:
+            model.lambda_ = lambda_
+            if args.model_name in ["vit", "resnet18", "resnet50"]:
+                image = item.to(args.device)
+                attr = attrs[i].to(args.device)
+                out = model(image.unsqueeze(0), attr.unsqueeze(0))
+                cert_rs = out["cert_rs"].cpu().item()
+            else:
+                inputs, _ = item
+                input_ids = inputs["input_ids"].to(args.device)
+                attr = attrs[i].to(args.device)
+                out = model(input_ids=input_ids, alpha=attr.unsqueeze(0))
+                cert_rs = out["cert_rs"].cpu().item()
+
+            lambda_to_radii[lambda_to_key(lambda_)].append(cert_rs)
 
         pbar.set_description(
             f"{args.model_name} {args.dataset_name} {args.explanation_name} {i+1}/{len(dataset)}"
@@ -121,9 +131,9 @@ if __name__ == "__main__":
         "dataset_name": args.dataset_name,
         "explanation_name": args.explanation_name,
         "total_samples": len(dataset),
-        "lambda": model.lambda_,
         "quant": model.q,
-        "certified_radii": all_certified_radii
+        "lambdas": args.lambdas,
+        "lambda_to_radii": lambda_to_radii
     }
 
     save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_hard_stability_radii.json")
