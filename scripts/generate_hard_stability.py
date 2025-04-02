@@ -122,7 +122,7 @@ if __name__ == "__main__":
         "explanation_name": args.explanation_name,
         "total_samples": len(dataset),
         "lambda": model.lambda_,
-        "quant": model.quant,
+        "quant": model.q,
         "certified_radii": all_certified_radii
     }
 
