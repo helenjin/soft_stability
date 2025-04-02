@@ -9,7 +9,7 @@ from transformers import ViTForImageClassification, RobertaForSequenceClassifica
 import torchvision
 
 # Load up the project
-sys.path.append("/home/antonxue/foo/soft_stability/src")
+sys.path.append("../src")
 from models import MaskedImageClassifier, MaskedTextClassifier
 from data_utils import ImageDataset, TweetEvalDataset
 
@@ -29,7 +29,7 @@ TWEETEVAL_DIR = "/home/antonxue/foo/data/tweeteval/datasets"
 
 def load_model_dataset_explanation(model_name: str, dataset_name: str, explanation_name: str):
     if model_name == "vit":
-        model = MaskedImageClassifier(ViTForImageClassification.from_pretrained(model_name))
+        model = MaskedImageClassifier(ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"))
     elif model_name == "resnet18":
         model = torchvision.models.resnet18(weights=torchvision.models.ResNet18_Weights.IMAGENET1K_V1)
     elif model_name == "resnet50":
@@ -215,16 +215,20 @@ if __name__ == "__main__":
 
     # Generate explanations
     all_attrs = []
-    for item in tqdm(dataset):
-        if task_type(args.model_name) == "image":
+    pbar = tqdm(dataset)
+    for i, item in enumerate(pbar):
+        if args.model_name in ["vit", "resnet18", "resnet50"]:
             image = item.to(args.device)
             attrs = expln_fn(model, image)
-        elif task_type(args.model_name) == "text":
+        else:
             inputs, _ = item
             input_ids = inputs["input_ids"].to(args.device)
             attrs = expln_fn(model, input_ids, dataset.tokenizer)
 
         all_attrs.append(attrs.cpu().view(-1).tolist())
+        pbar.set_description(
+            f"{args.model_name} {args.dataset_name} {args.explanation_name} {i+1}/{len(dataset)}"
+        )
     
     save_dict = {
         "model_name": args.model_name,
@@ -234,7 +238,7 @@ if __name__ == "__main__":
         "attrs": all_attrs
     }
 
-    save_to_file = os.path.join(args.output_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}.json")
+    save_to_file = os.path.join(args.output_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_attrs.json")
     with open(save_to_file, "w") as f:
         json.dump(save_dict, f, indent=2)
 

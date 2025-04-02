@@ -152,8 +152,8 @@ def soft_stability_rate_text(
 
     N = int(math.log(2/delta) / (2 * (epsilon**2))) + 1
     all_y_pertbs = []
-
-    for alpha_pertbs in torch.split(sample_alpha_pertbs(alpha, radius, N), batch_size):
+    all_alpha_pertbs = sample_alpha_pertbs(alpha, radius, N)
+    for alpha_pertbs in torch.split(all_alpha_pertbs, batch_size):
         # input_ids and attention_mask can share the same repeat pattern
         repeat_pattern = [alpha_pertbs.size(0), 1]
         y_pertbs = f(
@@ -164,6 +164,7 @@ def soft_stability_rate_text(
         all_y_pertbs.append(y_pertbs)
 
     all_y_pertbs = torch.cat(all_y_pertbs, dim=0)
+    all_matches = (y.argmax(dim=-1) == all_y_pertbs.argmax(dim=-1))
     soft_stab_rate = (y.argmax(dim=-1) == all_y_pertbs.argmax(dim=-1)).float().mean()
 
     if return_all:
@@ -171,6 +172,8 @@ def soft_stability_rate_text(
             "soft_stability_rate": soft_stab_rate,
             "y": y[0],
             "y_pertbs": all_y_pertbs,
+            "alpha_pertbs": all_alpha_pertbs,
+            "matches": all_matches
         }
 
     else:
