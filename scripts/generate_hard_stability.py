@@ -109,7 +109,7 @@ if __name__ == "__main__":
             inputs, _ = item
             input_ids = inputs["input_ids"].to(args.device)
             attr = attrs[i].to(args.device)
-            out = model(input_ids.unsqueeze(0), attr.unsqueeze(0))
+            out = model(input_ids=input_ids, alpha=attr.unsqueeze(0))
             all_certified_radii.append(out["cert_rs"].cpu().item())
 
         pbar.set_description(
