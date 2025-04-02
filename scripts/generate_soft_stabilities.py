@@ -72,7 +72,7 @@ def load_model_dataset_attributions(
 def compute_soft_stability_image(model, image, attr):
     soft_stability_rates = []
     for radius in IMAGE_RADII:
-        rate = soft_stability_rate(model, image, attr, radius, epsilon=0.05, delta=0.05)
+        rate = soft_stability_rate(model, image, attr, radius, epsilon=0.1, delta=0.1)
         soft_stability_rates.append(rate.item())
     return soft_stability_rates
 
@@ -82,7 +82,7 @@ def compute_soft_stability_text(model, input_ids, attr):
     soft_stability_rates = []
     max_radius_plus1 = min(21, attr.numel() - attr.sum())
     for radius in range(1, max_radius_plus1):
-        rate = soft_stability_rate_text(model, input_ids, attention_mask, attr, radius, epsilon=0.05, delta=0.05)
+        rate = soft_stability_rate_text(model, input_ids, attention_mask, attr, radius, epsilon=0.1, delta=0.1)
         soft_stability_rates.append(rate.item())
     return soft_stability_rates
 
