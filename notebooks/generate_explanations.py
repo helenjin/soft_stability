@@ -27,17 +27,6 @@ IMAGENET_SAMPLES_DIR = "/home/antonxue/foo/data/imagenet_samples"
 TWEETEVAL_DIR = "/home/antonxue/foo/data/tweeteval/datasets"
 
 
-def task_type(model_name: str):
-    if model_name == "vit":
-        return "image"
-    elif model_name == "resnet18" or model_name == "resnet50":
-        return "image"
-    elif model_name == "roberta":
-        return "text"
-    else:
-        raise ValueError(f"Model {model_name} not supported")
-
-
 def load_model_dataset_explanation(model_name: str, dataset_name: str, explanation_name: str):
     if model_name == "vit":
         model = MaskedImageClassifier(ViTForImageClassification.from_pretrained(model_name))
