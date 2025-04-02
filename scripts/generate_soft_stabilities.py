@@ -80,7 +80,8 @@ def compute_soft_stability_image(model, image, attr):
 def compute_soft_stability_text(model, input_ids, attr):
     attention_mask = torch.ones_like(input_ids)
     soft_stability_rates = []
-    for radius in range(1, attr.numel() - attr.sum()):
+    max_radius_plus1 = min(21, attr.numel() - attr.sum())
+    for radius in range(1, max_radius_plus1):
         rate = soft_stability_rate_text(model, input_ids, attention_mask, attr, radius, epsilon=0.05, delta=0.05)
         soft_stability_rates.append(rate.item())
     return soft_stability_rates
