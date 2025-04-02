@@ -43,7 +43,7 @@ def get_lime_for_image(
         "segmentation_fn": patch_segmenter,
         "top_labels": 1000, 
         "hide_color": 0, 
-        "num_samples": num_samples
+        "num_samples": num_samples,
     }
     gimk = { "positive_only": False }
     liek = { "random_state": 1 }
@@ -69,7 +69,7 @@ def get_shap_for_image(
     image: torch.FloatTensor,
     pred = None,
     num_patches: int = 196,
-    num_samples: int = 1000,
+    num_samples: int = 500,
     top_k_frac: float = 0.25,
     return_verbose: bool = False
 ):
@@ -292,7 +292,8 @@ def get_intgrad_for_text(
         pred = torch.argmax(logits, dim=-1)
 
     # call IntGrad
-    projection_layer = model.base_classifier.roberta.embeddings.word_embeddings
+    assert hasattr(model, "get_input_embeddings"), "Model must have a get_input_embeddings method"
+    projection_layer = model.get_input_embeddings()
     explainer = IntGradTextCls(model, projection_layer=projection_layer) 
         
     expln = explainer(input_ids.to(model.device), pred)

@@ -79,7 +79,7 @@ class ImageDataset(Dataset):
         self,
         image_folder: str,
         image_size: tuple[int, int] = (224, 224),
-        run_preprocessor: bool = True
+        use_preprocessor: bool = True
     ):
         self.image_folder = image_folder
         self.image_size = image_size
@@ -88,7 +88,7 @@ class ImageDataset(Dataset):
             for f in os.listdir(image_folder)
             if f.lower().endswith((".jpg", ".jpeg", ".png"))
         ])
-        self.preprocessor = vit_image_processor if run_preprocessor else None
+        self.preprocessor = vit_image_processor if use_preprocessor else None
 
     def __len__(self) -> int:
         return len(self.image_paths)
@@ -135,6 +135,54 @@ class TweetDataset(Dataset):
             self.num_data = len(f.readlines())
         with open(labels_path, "r") as f:
             self.labels = [int(l.strip()) for l in f]
+
+    def __len__(self) -> int:
+        return self.num_data
+
+    def __getitem__(self, idx: int) -> tuple[dict, int]:
+        def preprocess(text: str) -> str:
+            """Preprocess tweet text by normalizing mentions and URLs."""
+            new_text = []
+            for t in text.split(" "):
+                t = '@user' if t.startswith('@') and len(t) > 1 else t
+                t = 'http' if t.startswith('http') else t
+                new_text.append(t)
+            return " ".join(new_text)
+
+        text = linecache.getline(self.text_path, idx + 1)
+        text = preprocess(text)
+        inputs = self.tokenizer(
+            text,
+            return_tensors='pt',
+            padding=True,
+            max_length=512,
+            truncation=True
+        )
+        return inputs, self.labels[idx]
+
+
+class TweetEvalDataset(Dataset):
+    """Dataset for loading and preprocessing tweets with labels.
+    
+    Supports various Twitter-specific NLP tasks using RoBERTa tokenization.
+    
+    Args:
+        task: Type of NLP task (emoji, emotion, hate, irony, offensive, sentiment, stance)
+        dataset_dir: Path to directory containing the dataset
+    """
+    def __init__(self, task: str, datasets_dir: str):
+        assert task in ['emoji', 'emotion', 'hate', 'irony', 'offensive', 'sentiment', 'stance']
+
+        self.text_path = os.path.join(datasets_dir, task, "val_text.txt")
+        self.labels_path = os.path.join(datasets_dir, task, "val_labels.txt")
+        
+        with open(self.text_path, "r") as f:
+            self.num_data = len(f.readlines())
+
+        with open(self.labels_path, "r") as f:
+            self.labels = [int(l.strip()) for l in f]
+
+        self.tokenizer = AutoTokenizer.from_pretrained(f"cardiffnlp/twitter-roberta-base-{task}")
 
     def __len__(self) -> int:
         return self.num_data

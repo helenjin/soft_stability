@@ -266,7 +266,13 @@ class MaskedTextClassifier(nn.Module):
         super().__init__()
         self.base_classifier = base_classifier
         # Assume that the classifier comes with these
+        assert hasattr(base_classifier, "get_input_embeddings"), \
+            "Classifier must have a get_input_embeddings method"
+        
         self.embed_fn = base_classifier.get_input_embeddings()
+
+    def get_input_embeddings(self):
+        return self.embed_fn
 
     def forward(
         self,
@@ -298,7 +304,8 @@ class MaskedTextClassifier(nn.Module):
         assert (input_ids is None) ^ (inputs_embeds is None)
 
         if inputs_embeds is None:
-            inputs_embeds = self.embed_fn(input_ids.to(self.device))
+            device = next(self.parameters()).device
+            inputs_embeds = self.embed_fn(input_ids.to(device))
 
         bsz, L, _ = inputs_embeds.shape
 
