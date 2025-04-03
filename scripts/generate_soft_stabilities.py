@@ -68,12 +68,11 @@ def load_model_dataset_attributions(
     return model, dataset, attrs
 
 
-
 def compute_soft_stability_image(model, image, attr):
     soft_stability_rates = []
     for radius in IMAGE_RADII:
         rate = soft_stability_rate(model, image, attr, radius, epsilon=0.1, delta=0.1)
-        soft_stability_rates.append(rate.item())
+        soft_stability_rates.append(round(rate.item(), 4))
     return soft_stability_rates
 
 
@@ -83,7 +82,7 @@ def compute_soft_stability_text(model, input_ids, attr):
     max_radius_plus1 = min(21, attr.numel() - attr.sum())
     for radius in range(1, max_radius_plus1):
         rate = soft_stability_rate_text(model, input_ids, attention_mask, attr, radius, epsilon=0.1, delta=0.1)
-        soft_stability_rates.append(rate.item())
+        soft_stability_rates.append(round(rate.item(), 4))
     return soft_stability_rates
 
 
@@ -119,9 +118,7 @@ if __name__ == "__main__":
             soft_stability_rates = compute_soft_stability_text(model, input_ids, attr)
 
         all_soft_stability_rates.append(soft_stability_rates)
-        pbar.set_description(
-            f"{args.model_name} {args.dataset_name} {args.explanation_name} {i+1}/{len(dataset)}"
-        )
+        pbar.set_description(f"{args.model_name} {args.dataset_name} {args.explanation_name}")
 
     save_dict = {
         "model_name": args.model_name,

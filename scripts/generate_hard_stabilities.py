@@ -96,7 +96,7 @@ if __name__ == "__main__":
     parser.add_argument("--top_k_frac", type=float, default=0.25)
     parser.add_argument("--save_dir", type=str, default="_cache/")
     parser.add_argument("--device", type=str, default="cuda")
-    parser.add_argument("--lambdas", type=float, nargs='+', default=[0.125, 0.25, 0.375, 0.5])
+    parser.add_argument("--lambdas", nargs='+', default=[0.125, 0.25, 0.375, 0.5])
     args = parser.parse_args()
 
     save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_hard_stability_radii.json")
@@ -126,9 +126,7 @@ if __name__ == "__main__":
 
             lambda_to_radii[lambda_to_key(lambda_)].append(cert_rs)
 
-        pbar.set_description(
-            f"{args.model_name} {args.dataset_name} {args.explanation_name} {i+1}/{len(dataset)}"
-        )
+        pbar.set_description(f"{args.model_name} {args.dataset_name} {args.explanation_name}")
 
     save_dict = {
         "model_name": args.model_name,
