@@ -1,9 +1,9 @@
 import torch
 
 import sys
-# sys.path.append('/shared_data0/helenjin/exlib/src')
+sys.path.append('/shared_data0/helenjin/exlib/src')
 # sys.path.append('/shared_data0/weiqiuy/exlib/src')
-sys.path.append("/home/antonxue/foo/exlib/src")
+# sys.path.append("/home/antonxue/foo/exlib/src")
 import exlib
 
 from exlib.explainers import LimeImageCls, ShapImageCls, IntGradImageCls, MfabaImageCls
