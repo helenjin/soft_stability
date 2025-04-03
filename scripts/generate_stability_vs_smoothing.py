@@ -96,7 +96,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--model_name", type=str, required=True)
     parser.add_argument("--dataset_name", type=str, default="imagenet")
-    parser.add_argument("--max_samples_from_dataset", type=int, default=10)
+    parser.add_argument("--max_samples_from_dataset", type=int, default=200)
     parser.add_argument("--lambdas", nargs='+', default=[1.0, 0.8, 0.6, 0.4, 0.2])
     parser.add_argument("--topk_frac", type=float, default=0.25)
     parser.add_argument("--save_dir", type=str, default="_cache/")
@@ -115,8 +115,8 @@ if __name__ == "__main__":
         chosen_indices = torch.randperm(len(dataset))[:args.max_samples_from_dataset]
         dataset = Subset(dataset, chosen_indices)
     else:
-        # Find all the "good" indices, which are the indices of the samples with at least 50 tokens
-        good_indices = [i for i in range(len(dataset)) if dataset[i][0]["input_ids"].numel() >= 50]
+        # Find all the "good" indices, which are the indices of the samples with at least 40 tokens
+        good_indices = [i for i in range(len(dataset)) if dataset[i][0]["input_ids"].numel() >= 40]
         good_indices = torch.tensor(good_indices)
         chosen_indices = good_indices[torch.randperm(len(good_indices))[:args.max_samples_from_dataset]]
         dataset = Subset(dataset, chosen_indices)
