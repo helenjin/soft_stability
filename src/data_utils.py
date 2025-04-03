@@ -172,7 +172,7 @@ class TweetEvalDataset(Dataset):
     """
     def __init__(self, task: str, datasets_dir: str):
         assert task in ['emoji', 'emotion', 'hate', 'irony', 'offensive', 'sentiment', 'stance']
-
+        self.task = task
         self.text_path = os.path.join(datasets_dir, task, "val_text.txt")
         self.labels_path = os.path.join(datasets_dir, task, "val_labels.txt")
         

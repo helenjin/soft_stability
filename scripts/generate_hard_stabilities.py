@@ -79,7 +79,7 @@ def load_model_dataset_attributions(
     attrs = []
     for attr in save_dict["attrs"]:
         attr = torch.tensor(attr).view(-1)
-        attrs.append((attr > attr.quantile(1 - top_k_frac)).long())
+        attrs.append((attr >= attr.quantile(1 - top_k_frac)).long())
 
     return model, dataset, attrs
 

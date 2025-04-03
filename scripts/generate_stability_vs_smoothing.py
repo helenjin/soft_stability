@@ -139,13 +139,13 @@ if __name__ == "__main__":
             if args.model_name in ["vit", "resnet18", "resnet50"]:
                 image = item.to(args.device)
                 attr = torch.randn(196, device=args.device)
-                attr = (attr > attr.quantile(1 - args.topk_frac)).long()
+                attr = (attr >= attr.quantile(1 - args.topk_frac)).long()
                 rates = compute_stability_vs_smoothing(model, image, attr, all_radii)
             else:
                 inputs, _ = item
                 input_ids = inputs["input_ids"].to(args.device)
                 attr = torch.randn(*input_ids.shape, device=args.device)
-                attr = (attr > attr.quantile(1 - args.topk_frac)).long()
+                attr = (attr >= attr.quantile(1 - args.topk_frac)).long()
                 rates = compute_stability_vs_smoothing_text(model, input_ids, attr, all_radii)
 
             lambda_to_rates[lambda_to_key(lambda_)].append(rates)
