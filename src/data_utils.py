@@ -112,8 +112,47 @@ class ImageDataset(Dataset):
         return image_pt
 
 
+class ImageNetSubset(Dataset):
+    """Dataset for loading and preprocessing ImageNet images with their corresponding labels.
+    
+    This dataset assumes:
+    - Image files in the folder are named with their WordNet ID as prefix
+    - A mapping file 'imagenet_wordnet_ids.txt' exists in the same directory
+    - Images can be processed using either ViT preprocessing or basic torchvision transforms
+    
+    Args:
+        image_folder (str): Directory containing the ImageNet images
+        image_size (tuple[int, int]): Target dimensions (height, width) for the images
+        use_preprocessor (bool): If True, use ViT preprocessing; otherwise use basic transforms
+    """
+    def __init__(
+        self,
+        image_folder: str,
+        image_size: tuple[int, int] = (224, 224),
+        use_preprocessor: bool = True
+    ):
+        self.inner_dataset = ImageDataset(image_folder, image_size, use_preprocessor)
+
+        # Load WordNet ID to label mapping
+        self.wordnet_id_file = os.path.join(os.path.dirname(__file__), "imagenet_wordnet_ids.txt")
+        with open(self.wordnet_id_file, "r") as f:
+            self.wordnet_ids = [l.strip() for l in f]
+            self.wordnet_id_to_label = { id: i for i, id in enumerate(self.wordnet_ids) }
+
+    def __len__(self) -> int:
+        return len(self.inner_dataset)
+
+    def __getitem__(self, idx: int) -> tuple[torch.Tensor, int]:
+        image = self.inner_dataset[idx]
+        image_path = self.inner_dataset.image_paths[idx]
+        label = self.wordnet_id_to_label[image_path.split("/")[-1].split("_")[0]]
+        return image, label
+
+
 class TweetDataset(Dataset):
-    """Dataset for loading and preprocessing tweets with labels.
+    """TODO: This thing should be deletable.
+    
+    Dataset for loading and preprocessing tweets with labels.
     
     Supports various Twitter-specific NLP tasks using RoBERTa tokenization.
     

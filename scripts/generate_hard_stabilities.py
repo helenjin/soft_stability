@@ -99,6 +99,8 @@ if __name__ == "__main__":
     parser.add_argument("--lambdas", nargs='+', default=[0.125, 0.25, 0.375, 0.5])
     args = parser.parse_args()
 
+    torch.manual_seed(1234)
+
     save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_hard_stability_radii.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
