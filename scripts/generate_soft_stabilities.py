@@ -41,18 +41,11 @@ def load_model_dataset_attributions(
         raise ValueError(f"Model {model_name} not supported")
 
     if dataset_name.startswith("imagenet") and dataset_name.endswith("per_class"):
-        dataset =ImageDataset(
-            IMAGENET_SAMPLES_DIR + "/" + dataset_name,
-            image_size=(224, 224),
-            use_preprocessor=True
-        )
+        dataset = ImageDataset(IMAGENET_SAMPLES_DIR + "/" + dataset_name, image_size=(224, 224), use_preprocessor=True)
 
     elif dataset_name.startswith("tweeteval"):
         _, task = dataset_name.split("_")
-        dataset = TweetEvalDataset(
-            task=task,
-            datasets_dir=TWEETEVAL_DIR,
-        )
+        dataset = TweetEvalDataset(task=task, datasets_dir=TWEETEVAL_DIR)
 
     else:
         raise ValueError(f"Dataset {dataset_name} not supported")
