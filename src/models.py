@@ -57,7 +57,7 @@ class MaskedImageClassifier(nn.Module):
         return out
 
 
-class SmoothMaskedImageClassifier(nn.Module):
+class SmoothedImageClassifier(nn.Module):
     """
     Averaged evaluation of an alpha-masked image, where each bit in alpha is kept with 
     probability lambda_.
@@ -142,7 +142,7 @@ def discretized_mus_masks(
         return s # (q, dim)
 
 
-class CertifiedMuSImageClassifier(nn.Module):
+class CertifiedImageClassifier(nn.Module):
     """
     A certified variant of Multiplicative Smoothing (MuS) for masked image classifiers.
     
@@ -240,6 +240,34 @@ class CertifiedMuSImageClassifier(nn.Module):
         }
 
 
+class BinarizedMaskedImageClassifier(torch.nn.Module):
+    """
+    A wrapper around a masked image classifier that binarizes the input image.
+    """
+    def __init__(self, masked_image_classifier, image):
+        """
+        Args:
+            masked_image_classifier: The masked image classifier to wrap.
+            image: The image to binarize.
+        """
+        super().__init__()
+        self.masked_image_classifier = masked_image_classifier
+        self.register_buffer("image", image); assert image.ndim == 3
+
+    def forward(self, alpha):
+        """
+        Forward pass of the binarized masked image classifier.
+
+        Args:
+            alpha: The alpha values of shape (batch_size, grid_height, grid_width)
+
+        Returns:
+            The output of the masked image classifier.
+        """
+        x = self.image.unsqueeze(0).repeat(alpha.size(0), 1, 1, 1)
+        return self.masked_image_classifier(x, alpha)
+
+
 class MaskedTextClassifier(nn.Module):
     """
     A wrapper around a text classifier that supports masked inputs and attention.
@@ -326,7 +354,7 @@ class MaskedTextClassifier(nn.Module):
             return out
 
 
-class SmoothMaskedTextClassifier(nn.Module):
+class SmoothedTextClassifier(nn.Module):
     """
     A smoothed version of the masked text classifier that applies random masking to input features.
     
@@ -429,7 +457,7 @@ class SmoothMaskedTextClassifier(nn.Module):
             return F.one_hot(y.argmax(dim=-1), num_classes=y.size(-1)).float().mean(dim=1)
 
 
-class CertifiedMuSTextClassifier(nn.Module):
+class CertifiedTextClassifier(nn.Module):
     """A certified text classifier using multiplicative smoothing with discretized masks.
     
     This class implements a certified text classifier that uses multiplicative smoothing
@@ -534,3 +562,31 @@ class CertifiedMuSTextClassifier(nn.Module):
             "logits": all_ys,    # (bsz, num_classes)
             "cert_rs": cert_rs   # (bsz,)
         }
+
+
+class BinarizedMaskedTextClassifier(torch.nn.Module):
+    """
+    A wrapper around a masked text classifier that binarizes the input text.
+    """
+    def __init__(self, masked_text_classifier, input_ids):
+        """
+        Args:
+            masked_text_classifier: The masked text classifier to wrap.
+            input_ids: The input IDs to binarize.
+        """
+        super().__init__()
+        self.masked_text_classifier = masked_text_classifier
+        self.register_buffer("input_ids", input_ids.view(-1))
+
+    def forward(self, alpha):
+        """
+        Forward pass of the binarized masked text classifier.
+
+        Args:
+            alpha: The alpha values of shape (batch_size, seq_len)
+
+        Returns:
+            The output of the masked text classifier.
+        """
+        input_ids = self.input_ids.unsqueeze(0).repeat(alpha.size(0), 1)
+        return self.masked_text_classifier(input_ids=input_ids, attention_mask=alpha)

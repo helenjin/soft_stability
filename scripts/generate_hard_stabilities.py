@@ -10,7 +10,7 @@ from transformers import ViTForImageClassification, RobertaForSequenceClassifica
 
 # Load up the project
 sys.path.append("../src")
-from models import CertifiedMuSImageClassifier, CertifiedMuSTextClassifier
+from models import CertifiedImageClassifier, CertifiedTextClassifier
 from data_utils import ImageDataset, TweetEvalDataset
 from stability import soft_stability_rate, soft_stability_rate_text
 
@@ -29,26 +29,26 @@ def load_model_dataset_attributions(
     top_k_frac: float = 0.25
 ):
     if model_name == "vit":
-        model = CertifiedMuSImageClassifier(
+        model = CertifiedImageClassifier(
             ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"),
             lambda_=0.25,
             quant=64
         )
     elif model_name == "resnet18":
-        model = CertifiedMuSImageClassifier(
+        model = CertifiedImageClassifier(
             tvm.resnet18(weights=tvm.ResNet18_Weights.IMAGENET1K_V1),
             lambda_=0.25,
             quant=64
         )
     elif model_name == "resnet50":
-        model = CertifiedMuSImageClassifier(
+        model = CertifiedImageClassifier(
             tvm.resnet50(weights=tvm.ResNet50_Weights.IMAGENET1K_V1),
             lambda_=0.25,
             quant=64
         )
     elif model_name == "roberta":
         _, task = dataset_name.split("_")
-        model = CertifiedMuSTextClassifier(
+        model = CertifiedTextClassifier(
             RobertaForSequenceClassification.from_pretrained(f"cardiffnlp/roberta-base-{task}"),
             lambda_=0.25,
             quant=64

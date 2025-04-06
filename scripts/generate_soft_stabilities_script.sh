@@ -16,7 +16,7 @@ do
     do
         python3 generate_soft_stabilities.py \
             --model_name $MODEL \
-            --dataset_name $DATASET \
+            --dataset_name imagenet_2_per_class \
             --explanation_name $EXP
     done
 done

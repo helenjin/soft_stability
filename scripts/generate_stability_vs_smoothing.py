@@ -12,7 +12,7 @@ from transformers import ViTForImageClassification, RobertaForSequenceClassifica
 # Load up the project
 sys.path.append("../src")
 
-from models import SmoothMaskedImageClassifier, SmoothMaskedTextClassifier
+from models import SmoothedImageClassifier, SmoothedTextClassifier
 from data_utils import ImageDataset, TweetEvalDataset
 from stability import soft_stability_rate, soft_stability_rate_text
 
@@ -22,26 +22,26 @@ TWEETEVAL_DIR = "/home/antonxue/foo/data/tweeteval/datasets"
 
 def load_model(model_name: str, lambda_: float, num_samples: int = 16, dataset_name: str = None):
     if model_name == "vit":
-        model = SmoothMaskedImageClassifier(
+        model = SmoothedImageClassifier(
             ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"),
             lambda_=lambda_,
             num_samples=num_samples
         )
     elif model_name == "resnet18":
-        model = SmoothMaskedImageClassifier(
+        model = SmoothedImageClassifier(
             tvm.resnet18(weights=tvm.ResNet18_Weights.IMAGENET1K_V1),
             lambda_=lambda_,
             num_samples=num_samples
         )   
     elif model_name == "resnet50":
-        model = SmoothMaskedImageClassifier(
+        model = SmoothedImageClassifier(
             tvm.resnet50(weights=tvm.ResNet50_Weights.IMAGENET1K_V1),
             lambda_=lambda_,
             num_samples=num_samples
         )
     elif model_name == "roberta":
         _, task = dataset_name.split("_")
-        model= SmoothMaskedTextClassifier(
+        model= SmoothedTextClassifier(
             RobertaForSequenceClassification.from_pretrained(f"cardiffnlp/roberta-base-{task}"),
             lambda_=lambda_,
             num_samples=num_samples

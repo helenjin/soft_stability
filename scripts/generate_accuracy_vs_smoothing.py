@@ -9,7 +9,7 @@ from torch.utils.data import DataLoader
 from transformers import ViTForImageClassification, RobertaForSequenceClassification
 
 sys.path.append("../src")
-from models import SmoothMaskedImageClassifier, SmoothMaskedTextClassifier
+from models import SmoothedImageClassifier, SmoothedTextClassifier
 from data_utils import ImageNetSubset, TweetEvalDataset
 
 
@@ -24,26 +24,26 @@ def load_model_dataset(
     num_samples: int,
 ):
     if model_name == "vit":
-        model = SmoothMaskedImageClassifier(
+        model = SmoothedImageClassifier(
             ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"),
             lambda_=lambda_,
             num_samples=num_samples,
         )
     elif model_name == "resnet18":
-        model = SmoothMaskedImageClassifier(
+        model = SmoothedImageClassifier(
             tvm.resnet18(weights=tvm.ResNet18_Weights.IMAGENET1K_V1),
             lambda_=lambda_,
             num_samples=num_samples,
         )
     elif model_name == "resnet50":
-        model = SmoothMaskedImageClassifier(
+        model = SmoothedImageClassifier(
             tvm.resnet50(weights=tvm.ResNet50_Weights.IMAGENET1K_V1),
             lambda_=lambda_,
             num_samples=num_samples,
         )
     elif model_name == "roberta":
         _, task = dataset_name.split("_")
-        model = SmoothMaskedTextClassifier(
+        model = SmoothedTextClassifier(
             RobertaForSequenceClassification.from_pretrained(f"cardiffnlp/roberta-base-{task}"),
             lambda_=lambda_,
             num_samples=num_samples,

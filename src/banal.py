@@ -31,9 +31,9 @@ def binomial_coefficient(n, k):
 
 
 @torch.no_grad()
-def sample_level_k_weights(f, n, k, num_subsets=1024, input_samples=1024):
+def sample_level_k_fourier_info(f, n, k, num_subsets=1024, input_samples=1024):
     """
-    Estimate the level-k weights (Fourier coefficients and variance) of a Boolean function f.
+    Estimate the level-k info (Fourier coefficients and variance) of a Boolean function f.
 
     Args:
         f: Callable function that takes a 0/1 tensor of shape (n,) and outputs a tensor of 
@@ -79,7 +79,8 @@ def sample_level_k_weights(f, n, k, num_subsets=1024, input_samples=1024):
     # average_variance shape: (m,)
     # average_mass shape: (m,)
     return {
+        "subsets": subsets,
+        "coefficients": coefficients,
         "average_variance": (coefficients ** 2).mean(dim=0),  # Mean squared coefficients
         "average_mass": coefficients.abs().mean(dim=0),  # Mean absolute coefficients
-        "coefficients": coefficients  # All sampled coefficients
     }
