@@ -97,7 +97,7 @@ if __name__ == "__main__":
     parser.add_argument("--model_name", type=str, required=True)
     parser.add_argument("--dataset_name", type=str, default="imagenet")
     parser.add_argument("--max_samples_from_dataset", type=int, default=200)
-    parser.add_argument("--lambdas", nargs='+', default=[1.0, 0.8, 0.6, 0.4, 0.2])
+    parser.add_argument("--lambdas", nargs='+', default=[1.0, 0.9, 0.8, 0.7, 0.6, 0.5])
     parser.add_argument("--topk_frac", type=float, default=0.25)
     parser.add_argument("--save_dir", type=str, default="_cache/")
     parser.add_argument("--device", type=str, default="cuda")
@@ -123,10 +123,10 @@ if __name__ == "__main__":
 
     # Define the radii of perturbation
     if args.model_name in ["vit", "resnet18", "resnet50"]:
-        all_radii = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+        all_radii = list(range(1,21)) + [30, 40, 50, 60, 70, 80, 90, 100]
         all_radii = [r for r in all_radii if r <= 196 * (1 - args.topk_frac)]
     else:
-        all_radii = [2, 4, 6, 8, 10, 12, 14, 16, 18, 20]
+        all_radii = list(range(1, 31))
 
     lambda_to_rates = {lambda_to_key(lambda_): [] for lambda_ in args.lambdas}
     for lambda_ in args.lambdas:
