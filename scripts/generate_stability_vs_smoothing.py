@@ -20,7 +20,7 @@ IMAGENET_SAMPLES_DIR = "/home/antonxue/foo/data/imagenet_samples"
 TWEETEVAL_DIR = "/home/antonxue/foo/data/tweeteval/datasets"
 
 
-def load_model(model_name: str, lambda_: float, num_samples: int = 16, dataset_name: str = None):
+def load_model(model_name: str, lambda_: float, num_samples: int = 32, dataset_name: str = None):
     if model_name == "vit":
         model = SmoothedImageClassifier(
             ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"),
