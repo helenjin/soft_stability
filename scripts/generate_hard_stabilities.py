@@ -18,8 +18,6 @@ from stability import soft_stability_rate, soft_stability_rate_text
 IMAGENET_SAMPLES_DIR = "/home/antonxue/foo/data/imagenet_samples"
 TWEETEVAL_DIR = "/home/antonxue/foo/data/tweeteval/datasets"
 
-IMAGE_RADII = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 147]
-
 
 def load_model_dataset_attributions(
     save_dir: str,
@@ -101,7 +99,7 @@ if __name__ == "__main__":
 
     torch.manual_seed(1234)
 
-    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_hard_stability_radii.json")
+    save_file = os.path.join(args.save_dir, f"hard_radii_{args.explanation_name}_{args.model_name}_{args.dataset_name}.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
         exit()

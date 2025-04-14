@@ -18,7 +18,9 @@ from stability import soft_stability_rate, soft_stability_rate_text
 IMAGENET_SAMPLES_DIR = "/home/antonxue/foo/data/imagenet_samples"
 TWEETEVAL_DIR = "/home/antonxue/foo/data/tweeteval/datasets"
 
-IMAGE_RADII = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 147]
+# IMAGE_RADII = [1, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 147]
+IMAGE_RADII = list(range(1,21)) + [30, 40, 50, 60, 70, 80, 90, 100]
+MAX_TEXT_RADII = 20
 
 
 def load_model_dataset_attributions(
@@ -50,7 +52,7 @@ def load_model_dataset_attributions(
     else:
         raise ValueError(f"Dataset {dataset_name} not supported")
 
-    save_file = os.path.join(save_dir, f"{model_name}_{dataset_name}_{explanation_name}_attributions.json")
+    save_file = os.path.join(save_dir, f"attrs_{explanation_name}_{model_name}_{dataset_name}.json")
     save_dict = json.load(open(save_file))
 
     attrs = []
@@ -72,7 +74,7 @@ def compute_soft_stability_image(model, image, attr):
 def compute_soft_stability_text(model, input_ids, attr):
     attention_mask = torch.ones_like(input_ids)
     soft_stability_rates = []
-    max_radius_plus1 = min(21, attr.numel() - attr.sum())
+    max_radius_plus1 = min(MAX_TEXT_RADII+1, attr.numel() - attr.sum())
     for radius in range(1, max_radius_plus1):
         rate = soft_stability_rate_text(model, input_ids, attention_mask, attr, radius, epsilon=0.1, delta=0.1)
         soft_stability_rates.append(round(rate.item(), 4))
@@ -89,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
-    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_soft_stability_rates.json")
+    save_file = os.path.join(args.save_dir, f"soft_rates_{args.explanation_name}_{args.model_name}_{args.dataset_name}.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
         exit()

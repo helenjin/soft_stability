@@ -103,7 +103,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
-    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_stability_vs_smoothing.json")
+    save_file = os.path.join(args.save_dir, f"stability_vs_smoothing_{args.model_name}_{args.dataset_name}.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
         exit()

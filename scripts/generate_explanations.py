@@ -238,8 +238,8 @@ if __name__ == "__main__":
         "attrs": all_attrs
     }
 
-    save_to_file = os.path.join(args.output_dir, f"{args.model_name}_{args.dataset_name}_{args.explanation_name}_attributions.json")
-    with open(save_to_file, "w") as f:
+    save_file = os.path.join(args.output_dir, f"attrs_{args.explanation_name}_{args.model_name}_{args.dataset_name}.json")
+    with open(save_file, "w") as f:
         json.dump(save_dict, f, indent=2)
 
-    print(f"Saved explanations to {save_to_file}")
+    print(f"Saved explanations to {save_file}")

@@ -102,7 +102,7 @@ if __name__ == "__main__":
     parser.add_argument("--max_samples_from_dataset", type=int, default=10)
     args = parser.parse_args()
 
-    save_file = os.path.join(args.save_dir, f"{args.model_name}_{args.dataset_name}_fourier_vs_smoothing.json")
+    save_file = os.path.join(args.save_dir, f"fourier_vs_smoothing_{args.model_name}_{args.dataset_name}.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
         exit()
