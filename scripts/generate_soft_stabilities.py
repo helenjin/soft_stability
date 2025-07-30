@@ -28,7 +28,7 @@ def load_model_dataset_attributions(
     model_name: str,
     dataset_name: str,
     explanation_name: str,
-    top_k_frac: float = 0.25
+    top_k_frac: float
 ):
     if model_name == "vit":
         model = MaskedImageClassifier(ViTForImageClassification.from_pretrained("google/vit-base-patch16-224"))
@@ -91,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
-    save_file = os.path.join(args.save_dir, f"soft_rates_{args.explanation_name}_{args.model_name}_{args.dataset_name}.json")
+    save_file = os.path.join(args.save_dir, f"soft_rates_{args.explanation_name}_{args.model_name}_{args.dataset_name}_{args.top_k_frac}.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
         exit()
@@ -113,7 +113,7 @@ if __name__ == "__main__":
             soft_stability_rates = compute_soft_stability_text(model, input_ids, attr)
 
         all_soft_stability_rates.append(soft_stability_rates)
-        pbar.set_description(f"{args.model_name} {args.dataset_name} {args.explanation_name}")
+        pbar.set_description(f"{args.model_name} {args.dataset_name} {args.explanation_name} {args.top_k_frac}")
 
     save_dict = {
         "model_name": args.model_name,
