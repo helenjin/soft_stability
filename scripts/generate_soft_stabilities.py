@@ -91,7 +91,7 @@ if __name__ == "__main__":
     parser.add_argument("--device", type=str, default="cuda")
     args = parser.parse_args()
 
-    save_file = os.path.join(args.save_dir, f"soft_rates_{args.explanation_name}_{args.model_name}_{args.dataset_name}_{args.top_k_frac}.json")
+    save_file = os.path.join(args.save_dir, f"soft_rates_{args.explanation_name}_{args.model_name}_{args.dataset_name}_{args.top_k_frac:.3f}.json")
     if os.path.exists(save_file):
         print(f"File already exists: {save_file}")
         exit()

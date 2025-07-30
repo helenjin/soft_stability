@@ -2,7 +2,7 @@ for MODEL in resnet18 resnet50 vit
 do
     for EXP in lime shap intgrad mfaba random
     do
-        for FRAC in 0.125 0.25 0.375 0.5
+        for FRAC in 0.125 0.250 0.375 0.500
         do
             python3 generate_soft_stabilities.py \
                 --model_name $MODEL \
@@ -18,7 +18,7 @@ for DATASET in tweeteval_emoji tweeteval_emotion tweeteval_hate tweeteval_irony 
 do
     for EXP in lime shap intgrad mfaba random
     do
-        for FRAC in 0.125 0.25 0.375 0.5
+        for FRAC in 0.125 0.250 0.375 0.500
         do
             python3 generate_soft_stabilities.py \
                 --model_name roberta \
