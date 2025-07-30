@@ -28,7 +28,8 @@ def sample_alpha_pertbs(
     zero_indices = torch.nonzero(alpha == 0, as_tuple=False).squeeze()
     num_zeros = zero_indices.numel()
     if radius > num_zeros:
-        raise ValueError(f"Radius {radius} > num zeros {num_zeros}")
+        print(f"Radius {radius} > num zeros {num_zeros}, setting radius = num_zeros")
+        radius = num_zeros
 
     # Compute log-binomial coefficients in log-space, because we have massive blow-up otherwise.
     log_flip_probs = torch.tensor(
